@@ -1,0 +1,33 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  PROJECT_ID: "platfrom-cryptique"
+  REGION: "us-central1"
+  SERVICE_NAME: "cryptique-backend"
+  IMAGE_NAME: "gcr.io/$PROJECT_ID/$SERVICE_NAME"
+
+before_script:
+  - echo $GCLOUD_SERVICE_KEY | base64 -d > gcloud-service-key.json
+  - gcloud auth activate-service-account --key-file=gcloud-service-key.json
+  - gcloud config set project $PROJECT_ID
+  - gcloud auth configure-docker gcr.io --quiet
+
+build:
+  stage: build
+  script:
+    - docker build -t $IMAGE_NAME .
+    - docker push $IMAGE_NAME
+
+deploy:
+  stage: deploy
+  script:
+    - gcloud run deploy $SERVICE_NAME \
+        --image $IMAGE_NAME \
+        --platform managed \
+        --region $REGION \
+        --allow-unauthenticated \
+        --timeout=300
+  only:
+    - main
