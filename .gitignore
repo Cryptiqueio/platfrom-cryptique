@@ -1,0 +1,3 @@
+# Ignore Google Cloud service account keys
+backend/serviceAccountKey.json
+gitlab-key.json
