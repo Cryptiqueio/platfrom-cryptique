@@ -10,44 +10,46 @@ jobs:
     name: Build & Deploy
     runs-on: ubuntu-latest
 
-    env:
-      PROJECT_ID: platfrom-cryptique
-      REGION: us-central1
-      SERVICE_NAME: cryptique-backend
-      IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/cryptique-backend
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # ✅ Step 1: Authenticate with Google Cloud
+      # ✅ Authenticate with Google Cloud
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_SERVICE_KEY }}
 
-      # ✅ Step 2: Set up gcloud CLI
+      # ✅ Set up Google Cloud SDK
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      # ✅ Step 3: Authenticate Docker with Google Container Registry
+      # ✅ Enable Cloud Run services (optional but useful)
+      - name: Enable Cloud Run & Cloud Build APIs
+        run: |
+          gcloud services enable cloudbuild.googleapis.com run.googleapis.com
+
+      # ✅ Authenticate Docker with Google Container Registry
       - name: Authenticate Docker with Google Container Registry
         run: gcloud auth configure-docker gcr.io
 
-      # ✅ Step 4: Build and Push Docker Image
+      # ✅ Build and Push Docker Image (Fixed Path)
       - name: Build and Push Docker Image
         run: |
+          IMAGE_NAME=gcr.io/${{ secrets.GCP_PROJECT_ID }}/cryptique-backend
+          cd backend  # 🔥 Fix: Change to the backend directory
           docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
 
-      # ✅ Step 5: Deploy to Cloud Run
+      # ✅ Deploy to Cloud Run
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy $SERVICE_NAME \
+          IMAGE_NAME=gcr.io/${{ secrets.GCP_PROJECT_ID }}/cryptique-backend
+          gcloud run deploy cryptique-backend \
             --image $IMAGE_NAME \
             --platform managed \
-            --region $REGION \
+            --region us-central1 \
             --allow-unauthenticated \
             --timeout=300
