@@ -5,16 +5,16 @@ on:
     branches:
       - main
 
-env:
-  PROJECT_ID: platfrom-cryptique
-  REGION: us-central1
-  SERVICE_NAME: cryptique-backend
-  IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.SERVICE_NAME }}
-
 jobs:
   build:
     name: Build & Deploy
     runs-on: ubuntu-latest
+
+    env:
+      PROJECT_ID: platfrom-cryptique
+      REGION: us-central1
+      SERVICE_NAME: cryptique-backend
+      IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/cryptique-backend
 
     steps:
       - name: Checkout code
@@ -41,4 +41,4 @@ jobs:
             --platform managed \
             --region $REGION \
             --allow-unauthenticated \
-            --timeout=300
+         
